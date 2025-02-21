@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kidney Disease Chatbot</title>
+    
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <!-- Stylesheet -->
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #121212;
+            color: white;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        
+        .chat-container {
+            width: 400px;
+            height: 600px;
+            background: #1E1E1E;
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 4px 10px rgba(255, 255, 255, 0.1);
+        }
+        
+        .chat-header {
+            background: #6200EE;
+            padding: 15px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .chat-box {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .chat-box p {
+            padding: 10px;
+            border-radius: 8px;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+        
+        .user-message {
+            align-self: flex-end;
+            background: #03DAC6;
+            color: #000;
+        }
+        
+        .bot-message {
+            align-self: flex-start;
+            background: #333;
+            color: white;
+        }
+        
+        .input-container {
+            display: flex;
+            padding: 10px;
+            background: #292929;
+        }
+        
+        .chat-input {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            background: #3A3A3A;
+            color: white;
+            outline: none;
+        }
+        
+        .send-btn {
+            background: #BB86FC;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            margin-left: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        
+        .send-btn:hover {
+            background: #9E67E6;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="chat-container">
+        <div class="chat-header">💬 Kidney Disease Chatbot</div>
+        <div class="chat-box" id="chatBox">
+            <p class="bot-message">👋 Hello! Ask me anything about kidney disease.</p>
+        </div>
+        
+        <div class="input-container">
+            <input type="text" id="userInput" class="chat-input" placeholder="Type your question..." autofocus>
+            <button id="sendBtn" class="send-btn">Send</button>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById("sendBtn").addEventListener("click", () => sendMessage());
+        document.getElementById("userInput").addEventListener("keypress", function (event) {
+            if (event.key === "Enter") sendMessage();
+        });
+
+        function sendMessage() {
+            let inputField = document.getElementById("userInput");
+            let chatBox = document.getElementById("chatBox");
+
+            let userMessage = inputField.value.trim();
+            if (userMessage === "") return;
+
+            chatBox.innerHTML += `<p class="user-message">${userMessage}</p>`;
+            inputField.value = "";
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            let typingIndicator = document.createElement("p");
+            typingIndicator.className = "bot-message";
+            typingIndicator.innerHTML = "⏳ Thinking...";
+            chatBox.appendChild(typingIndicator);
+
+            fetch("http://127.0.0.1:5001/chat", {
+                method: "POST",
+                headers: { 
+                    "Content-Type": "application/json",
+                    "x-api-key": "your_secure_api_key"
+                },
+                body: JSON.stringify({ message: userMessage }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                typingIndicator.remove();
+                let botMessage = document.createElement("p");
+                botMessage.className = "bot-message";
+                botMessage.innerHTML = data.response.replace(/\n/g, "<br>");
+                chatBox.appendChild(botMessage);
+                chatBox.scrollTop = chatBox.scrollHeight;
+            })
+            .catch(error => {
+                console.error("Fetch error:", error);
+                typingIndicator.remove();
+                chatBox.innerHTML += `<p class="bot-message">❌ API request failed.</p>`;
+                chatBox.scrollTop = chatBox.scrollHeight;
+            });
+        }
+    </script>
+</body>
+</html>
